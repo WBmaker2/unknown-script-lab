@@ -1,0 +1,27 @@
+{
+  "name": "unknown-script-lab",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "description": "미지의 문자 해독 연구소 — 가상 언어 증거 추론 학습 앱 (P0)",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc -b && vite build",
+    "preview": "vite preview",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "check": "tsc --noEmit"
+  },
+  "dependencies": {
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0"
+  },
+  "devDependencies": {
+    "@types/react": "^19.0.0",
+    "@types/react-dom": "^19.0.0",
+    "@vitejs/plugin-react": "^4.3.4",
+    "typescript": "~5.6.2",
+    "vite": "^7.0.0",
+    "vitest": "^3.0.5"
+  }
+}
