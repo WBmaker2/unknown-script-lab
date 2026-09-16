@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 300" role="img" aria-label="받는 장면">
+  <rect width="400" height="300" fill="#f6f5f0"/>
+  <ellipse cx="200" cy="270" rx="150" ry="18" fill="#e8e4da"/>
+  <circle cx="130" cy="120" r="28" fill="#f4d4b8"/>
+  <rect x="108" y="148" width="44" height="70" rx="12" fill="#5b8fae"/>
+  <circle cx="270" cy="120" r="28" fill="#e8c9a8"/>
+  <rect x="248" y="148" width="44" height="70" rx="12" fill="#7a9e6d"/>
+  <circle cx="200" cy="168" r="14" fill="#c9340f"/>
+  <path d="M170 182 L200 200 L230 182" fill="none" stroke="#1d2530" stroke-width="3" stroke-linecap="round"/>
+  <path d="M200 200 L200 220" fill="none" stroke="#1d2530" stroke-width="3" stroke-linecap="round"/>
+</svg>

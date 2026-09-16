@@ -8,7 +8,6 @@ interface Props {
   docs: MissionDocument[];
   onLink: (glyph: string, vocab: string, docIds: string[]) => void;
 }
-
 const VOCAB_OPTIONS = [
   ...(['A0', 'A1', 'A2'] as const).map((v) => ({ value: v, label: `${MEANING_LABELS[v]} (행위자)` })),
   ...(['O0', 'O1', 'O2'] as const).map((v) => ({ value: v, label: `${MEANING_LABELS[v]} (대상)` })),
@@ -17,11 +16,6 @@ const VOCAB_OPTIONS = [
   { value: 'C2', label: '둘 (수량)' },
   { value: 'PL', label: '복수 표지' },
 ];
-
-export interface DraftLink {
-  glyph: string;
-  vocab: string;
-}
 
 /** 단서 비교: 같은 기호·다른 기호 표시 + 기호-뜻 연결(선택 후 뜻 버튼 방식). */
 export function EvidenceBoard({ docs, onLink }: Props) {
@@ -71,6 +65,7 @@ export function EvidenceBoard({ docs, onLink }: Props) {
 
   return (
     <section aria-label="단서 비교">
+      <p className="flow-lead">비교에 담을 문서 2장을 고른 뒤, 같은 기호와 다른 기호를 확인하고 근거를 연결하세요.</p>
       <div className="docgrid">
         {docs.map((d) => (
           <DocCard key={d.id} doc={d} selected={pair.includes(d.id)} onToggle={toggle} />
@@ -78,29 +73,36 @@ export function EvidenceBoard({ docs, onLink }: Props) {
       </div>
 
       {comparison && (
-        <div className="well" style={{ marginTop: 'var(--space-4)' }}>
+        <div className="well comparison-panel">
           <h3 style={{ margin: '0 0 var(--space-2)' }}>같은 기호와 다른 기호</h3>
-          <p>
-            같은 기호: <strong>{comparison.same.join(' · ') || '없음'}</strong>
-          </p>
-          <p>
-            {chosen[0].id}에만: <strong>{comparison.onlyA.join(' · ') || '없음'}</strong>
-            {' / '}
-            {chosen[1].id}에만: <strong>{comparison.onlyB.join(' · ') || '없음'}</strong>
-          </p>
-          <div style={{ display: 'flex', gap: 'var(--space-2)', flexWrap: 'wrap', alignItems: 'end' }}>
+          <div className="comparison-grid" role="group" aria-label="기호 비교 결과">
+            <div className="comparison-chip">
+              <span className="pinlabel" data-tone="pin">같은 기호</span>
+              <strong>{comparison.same.join(' · ') || '없음'}</strong>
+            </div>
+            <div className="comparison-chip">
+              <span className="pinlabel" data-tone="amber">{chosen[0].id}에만</span>
+              <strong>{comparison.onlyA.join(' · ') || '없음'}</strong>
+            </div>
+            <div className="comparison-chip">
+              <span className="pinlabel" data-tone="amber">{chosen[1].id}에만</span>
+              <strong>{comparison.onlyB.join(' · ') || '없음'}</strong>
+            </div>
+          </div>
+          <div className="comparison-form">
             <label>
               기호
               <input
                 value={glyph}
                 onChange={(e) => setGlyph(e.target.value.trim().toUpperCase())}
                 placeholder="예: G3"
-                style={{ width: 90, marginLeft: 8 }}
+                aria-describedby="glyph-hint"
               />
             </label>
+            <span id="glyph-hint" className="field-hint">문서에 나온 기호 ID를 입력하세요.</span>
             <label>
               뜻
-              <select value={vocab} onChange={(e) => setVocab(e.target.value)} style={{ marginLeft: 8 }}>
+              <select value={vocab} onChange={(e) => setVocab(e.target.value)}>
                 {VOCAB_OPTIONS.map((o) => (
                   <option key={o.value} value={o.value}>
                     {o.label}
@@ -113,7 +115,7 @@ export function EvidenceBoard({ docs, onLink }: Props) {
             </button>
           </div>
           {notice && (
-            <p role="status" style={{ marginBottom: 0 }}>
+            <p role="status" className="status-line">
               {notice}
             </p>
           )}

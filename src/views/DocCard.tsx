@@ -1,6 +1,7 @@
 import { GLYPHS } from '../engine/glyphs';
 import type { MissionDocument } from '../engine/missions';
 import { meaningToScene } from './scene';
+import { sceneImageForDoc } from './sceneAssets';
 import { Glyph } from './Glyph';
 
 interface Props {
@@ -12,26 +13,39 @@ interface Props {
 
 const glyphById = new Map(GLYPHS.map((g) => [g.id, g]));
 
-/** 문서 웰: 구조화된 장면 설명 + 정확한 기호 문자열 + 핀 라벨. */
+/** 문서 웰: 장면 일러스트 + 구조화된 설명 + 정확한 기호 + 핀 라벨. */
 export function DocCard({ doc, selected, onToggle, revealed = true }: Props) {
+  const scene = meaningToScene(doc.meaning);
+  const art = sceneImageForDoc(doc.imageId, doc.meaning);
+
   return (
     <article
-      className="well"
-      style={{ padding: 'var(--space-4)', ...(selected ? { borderColor: 'var(--accent)' } : {}) }}
+      className={['doc-card', 'well', selected ? 'doc-card--selected' : ''].filter(Boolean).join(' ')}
       aria-label={`문서 ${doc.id}`}
     >
-      <p style={{ margin: '0 0 var(--space-2)', fontWeight: 650 }}>{meaningToScene(doc.meaning)}</p>
+      <figure className="doc-card__figure">
+        <img
+          className={['scene-thumb', art.ratio === '4 / 3' ? 'scene-thumb--action' : 'scene-thumb--hero'].join(' ')}
+          src={art.src}
+          alt={art.alt}
+          width={280}
+          height={art.ratio === '4 / 3' ? 210 : 158}
+          loading="lazy"
+        />
+        <figcaption className="doc-card__caption">행동 관계 보조 그림 · 아래 설명이 기준입니다.</figcaption>
+      </figure>
+      <p className="doc-card__scene">{scene}</p>
       {revealed ? (
-        <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }} aria-label={`기호열 ${doc.tokens.join(' ')}`}>
+        <div className="doc-card__glyphs" aria-label={`기호열 ${doc.tokens.join(' ')}`}>
           {doc.tokens.map((t, i) => {
             const g = glyphById.get(t);
             return g ? <Glyph key={`${t}-${i}`} glyph={g} label={`${g.accessibleName} (문서 ${doc.id})`} /> : null;
           })}
         </div>
       ) : (
-        <p style={{ margin: '0 0 var(--space-2)' }}>비용을 쓰고 열면 기호가 공개됩니다.</p>
+        <p className="doc-card__hidden">비용을 쓰고 열면 기호가 공개됩니다.</p>
       )}
-      <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginTop: 'var(--space-2)' }}>
+      <div className="doc-card__meta">
         <span className="pinlabel" data-tone="pin">증거 Lv.{doc.evidenceLevel}</span>
         <span className="pinlabel" data-tone={doc.unlockCost === 0 ? 'pin' : 'amber'}>
           비용 {doc.unlockCost}

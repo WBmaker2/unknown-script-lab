@@ -9,14 +9,23 @@ import { DocCard } from './views/DocCard';
 import { EvidenceBoard } from './views/EvidenceBoard';
 import { HypothesisNote, type LinkRecord } from './views/HypothesisNote';
 import { InvestigateView } from './views/InvestigateView';
+import { PhaseNav, type Phase } from './views/PhaseNav';
 import { TrialView, type TrialResult } from './views/TrialView';
 import { UpdateHistory, type HistoryEntry } from './views/UpdateHistory';
+import { SCENE_IMAGES } from './views/sceneAssets';
 
-type Phase = '보관함' | '비교' | '가설' | '추가조사' | '시험';
-const PHASES: Phase[] = ['보관함', '비교', '가설', '추가조사', '시험'];
 const START_BUDGET = 3;
-
 const now = () => new Date().toISOString().slice(0, 10);
+
+function completedPhases(phase: Phase, links: LinkRecord[], opened: string[], results: Record<string, TrialResult>): Phase[] {
+  const done: Phase[] = [];
+  if (phase !== '보관함') done.push('보관함');
+  if (links.length > 0 || phase === '가설' || phase === '추가조사' || phase === '시험') done.push('비교');
+  if (links.length >= 1 || phase === '추가조사' || phase === '시험') done.push('가설');
+  if (opened.length > 0 || phase === '시험') done.push('추가조사');
+  if (Object.keys(results).length > 0) done.push('시험');
+  return [...new Set(done)];
+}
 
 export function App() {
   const missions = useMemo<Mission[]>(() => buildMissions(), []);
@@ -31,6 +40,7 @@ export function App() {
   const [results, setResults] = useState<Record<string, TrialResult>>({});
   const [history, setHistory] = useState<HistoryEntry[]>([
     { date: '2026-09-15', text: '최초 개발 시작 — M1 엔진, M2 후보판정 구현' },
+    { date: '2026-09-16', text: '교육용 리디자인 — Specimen Tray UI 정렬, 단계 진행 표시, 장면 일러스트 추가' },
   ]);
 
   const openedDocs = useMemo(
@@ -55,7 +65,6 @@ export function App() {
     return map;
   }, [mission, opened, evidence, survivors.length]);
 
-  // 다음 행동 하나에만 aura: 비교→가설→추가조사→시험 순서로 제안
   const suggested: Phase = !started
     ? '보관함'
     : links.length === 0
@@ -65,6 +74,8 @@ export function App() {
         : links.length < 3
           ? '가설'
           : '시험';
+
+  const completed = completedPhases(phase, links, opened, results);
 
   const switchMission = (id: string) => {
     setMissionId(id);
@@ -126,7 +137,6 @@ export function App() {
     }
   };
 
-  // 기록 저장 (세션 폴백 포함)
   useEffect(() => {
     if (!started || links.length === 0) return;
     saveRecord(
@@ -143,6 +153,7 @@ export function App() {
   }, [started, links, mission.id, opened, budget, survivors.length]);
 
   const storedCount = loadRecords().length;
+  const hero = SCENE_IMAGES['scene-hero'];
 
   return (
     <div className="app">
@@ -151,14 +162,14 @@ export function App() {
           미지의 문자 해독 연구소
           <small>사전 없이 기호와 장면만으로 언어 규칙 찾기</small>
         </div>
-        <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+        <div className="mission-switch" role="group" aria-label="미션 선택">
           {missions.map((m, i) => (
             <button
               key={m.id}
               type="button"
+              className={mission.id === m.id ? 'mission-switch__btn mission-switch__btn--active' : 'mission-switch__btn'}
               onClick={() => switchMission(m.id)}
               aria-pressed={mission.id === m.id}
-              style={mission.id === m.id ? { borderColor: 'var(--ink)' } : undefined}
             >
               미션 {i + 1}
             </button>
@@ -167,44 +178,49 @@ export function App() {
       </header>
 
       {!started ? (
-        <main className="layout" style={{ gridTemplateColumns: 'minmax(0, 1fr)' }}>
-          <section className="well" aria-labelledby="q-title">
-            <h2 id="q-title">사전 없이 반복되는 기호와 장면만으로 언어 규칙을 찾을 수 있을까?</h2>
-            <p>
-              {mission.title}. 사람·물건·수량이 그려진 문서 {mission.initialDocuments.length}장에서
-              공통 기호를 찾고, 가설 3개를 연결한 뒤 새 문서에서 검사합니다.
-            </p>
-            <div className="cta-row">
-              <button type="button" className="gi-pulse" onClick={() => setStarted(true)}>
-                시작하기
-              </button>
+        <main className="layout layout--intro">
+          <section className="well welcome-well" aria-labelledby="q-title">
+            <div className="welcome-grid">
+              <div className="welcome-copy">
+                <p className="welcome-kicker">25분 탐구 · 가상 언어 증거 추론</p>
+                <h2 id="q-title">사전 없이 반복되는 기호와 장면만으로 언어 규칙을 찾을 수 있을까?</h2>
+                <p>
+                  {mission.title}. 사람·물건·수량이 그려진 문서 {mission.initialDocuments.length}장에서
+                  공통 기호를 찾고, 가설 3개를 연결한 뒤 새 문서에서 검사합니다.
+                </p>
+                <ul className="welcome-steps" aria-label="탐구 순서">
+                  <li>문서 보관함에서 장면 비교</li>
+                  <li>단서 비교로 기호-뜻 가설 연결</li>
+                  <li>추가 조사 또는 새 문서 시험</li>
+                </ul>
+                <div className="cta-row">
+                  <button type="button" className="gi-pulse" onClick={() => setStarted(true)}>
+                    시작하기
+                  </button>
+                  <UpdateHistory entries={history} />
+                </div>
+              </div>
+              <figure className="welcome-figure">
+                <img className="scene-thumb scene-thumb--hero" src={hero.src} alt={hero.alt} width={480} height={270} />
+                <figcaption>가상 탐구실 — 생성 일러스트는 학습 분위기만 보조합니다.</figcaption>
+              </figure>
             </div>
           </section>
         </main>
       ) : (
         <main className="layout">
-          <div>
-            <nav aria-label="탐구 화면" style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginBottom: 'var(--space-4)' }}>
-              {PHASES.map((p) => (
-                <button
-                  key={p}
-                  type="button"
-                  onClick={() => setPhase(p)}
-                  aria-current={phase === p ? 'step' : undefined}
-                  className={phase !== p && suggested === p ? 'gi-pulse' : undefined}
-                  style={phase === p ? { borderColor: 'var(--ink)', background: 'var(--ink)', color: '#fff' } : undefined}
-                >
-                  {p === '추가조사' ? '추가 조사' : p}
-                </button>
-              ))}
-            </nav>
+          <div className="main-flow">
+            <PhaseNav current={phase} suggested={suggested} completed={completed} onSelect={setPhase} />
 
             {phase === '보관함' && (
-              <div className="docgrid">
-                {mission.initialDocuments.map((d) => (
-                  <DocCard key={d.id} doc={d} />
-                ))}
-              </div>
+              <section aria-label="문서 보관함">
+                <p className="flow-lead">초기 문서 {mission.initialDocuments.length}장을 읽고 공통 기호를 찾아 보세요.</p>
+                <div className="docgrid">
+                  {mission.initialDocuments.map((d) => (
+                    <DocCard key={d.id} doc={d} />
+                  ))}
+                </div>
+              </section>
             )}
             {phase === '비교' && <EvidenceBoard docs={openedDocs} onLink={addLink} />}
             {phase === '가설' && (
@@ -232,26 +248,27 @@ export function App() {
             )}
           </div>
 
-          <aside className="well" aria-label="연구 노트 요약">
+          <aside className="well research-note" aria-label="연구 노트 요약">
             <h2>{mission.title}</h2>
             <p>
               <span className="pinlabel" data-tone={survivors.length === 1 ? 'pin' : 'amber'}>
                 남은 후보 {survivors.length} / {CANDIDATE_HYPOTHESES.length}
               </span>
             </p>
-            <p style={{ fontSize: 14 }}>
+            <p className="note-copy">
               후보 수는 교육용 사전 정의 집합이며 가능한 모든 언어의 수가 아닙니다.
             </p>
-            <p style={{ fontSize: 14 }}>연결 {links.length}개 · 열린 추가 문서 {opened.length}개 · 예산 {budget}</p>
+            <dl className="note-stats">
+              <div><dt>연결</dt><dd>{links.length}개</dd></div>
+              <div><dt>추가 문서</dt><dd>{opened.length}개</dd></div>
+              <div><dt>예산</dt><dd>{budget}</dd></div>
+            </dl>
             <div className="cta-row">
               <UpdateHistory entries={history} />
               <button
                 type="button"
                 onClick={() => {
-                  const blob = new Blob(
-                    [JSON.stringify(loadRecords(), null, 2)],
-                    { type: 'application/json' },
-                  );
+                  const blob = new Blob([JSON.stringify(loadRecords(), null, 2)], { type: 'application/json' });
                   const url = URL.createObjectURL(blob);
                   const a = document.createElement('a');
                   a.href = url;
@@ -260,7 +277,7 @@ export function App() {
                   URL.revokeObjectURL(url);
                 }}
               >
-                기록 내보내기{storedCount > 0 ? ` (${storedCount})` : ''}
+                기록보내기{storedCount > 0 ? ` (${storedCount})` : ''}
               </button>
             </div>
           </aside>
@@ -269,7 +286,7 @@ export function App() {
 
       <footer className="footer">
         <span>P0 · 언어 1개 · 기호 12개 · 미션 3개</span>
-        <span>밝은 한국어 UI · 320–1280px 검증 예정</span>
+        <span>밝은 한국어 UI · 320–1280px 검증</span>
       </footer>
     </div>
   );
