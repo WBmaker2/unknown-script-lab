@@ -46,6 +46,15 @@
 4. DocCard: 16:9 hero·4:3 장면 PNG 배치, 캡션·텍스트 설명 병행
 5. EvidenceBoard: 비교 결과 3열 칩 패널
 
-## Not Done (by design)
+## Release
+
+- GitHub repository: https://github.com/WBmaker2/unknown-script-lab
+- 기능 릴리스 커밋: `1959039ce77fb36108753552f709f553dc9fa22f`
+- 원격 ref: `origin/main`이 위 커밋을 가리킴
+- GitHub Actions: https://github.com/WBmaker2/unknown-script-lab/actions/runs/35039722093 (build·deploy 성공)
+- GitHub Pages: https://wbmaker2.github.io/unknown-script-lab/
+- 공개 확인: Pages HTML 200, hero·give·receive·carry v4 PNG 200, 브라우저에서 PNG naturalWidth 확인, 320px 가로 넘침 없음
+
+## Remaining scope
 
 - HVC registration (별도 요청 필요)
